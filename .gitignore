@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.pth
+*.bin
+*.safetensors
+
+# HuggingFace model cache
+outputs/*/checkpoint-*/
+outputs/*/runs/
+
+# System
+.DS_Store
+.env
+
+# Notebooks output
+.ipynb_checkpoints/
+
+# Large intermediate files
+data/processed/

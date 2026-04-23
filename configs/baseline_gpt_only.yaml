@@ -1,0 +1,45 @@
+# Experiment 1: Baseline — GPT-translated sentences only
+# Purpose: Clean single-source baseline. Establishes a ceiling for
+# a model trained and evaluated on the same translation style.
+
+experiment_name: baseline_gpt_only
+description: "GPT-5.4 mini translations only. Single-source baseline."
+
+model:
+  name: UBC-NLP/ARBERTv2
+  # To switch to AraBERT: aubmindlab/bert-base-arabertv2
+  num_labels: 2
+  id2label:
+    0: Non-biased
+    1: Biased
+
+data:
+  raw_path: data/raw/consensus_dataset.csv
+  train_path: data/processed/baseline_gpt_only/train.csv
+  test_path: data/processed/baseline_gpt_only/test.csv
+  summary_path: data/processed/baseline_gpt_only/dataset_summary.json
+  text_column: arabic_text
+  label_column: label
+  source_column: source
+  group_column: sentence_id          # used for leakage-safe train/test split
+  sources_to_include: [gpt]
+
+training:
+  max_length: 128
+  batch_size: 16
+  eval_batch_size: 32
+  epochs: 5
+  learning_rate: 2.0e-5
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+  use_class_weights: true            # compensates for Biased/Non-biased imbalance
+  fp16: true                         # enable for GPU (Colab); set false for CPU
+  seed: 42
+  test_size: 0.20
+  logging_steps: 20
+
+evaluation:
+  metric_for_best_model: f1_macro    # primary selection criterion for best checkpoint
+  cross_source_eval: false           # no cross-source target for GPT-only experiment
+
+output_dir: outputs/baseline_gpt_only

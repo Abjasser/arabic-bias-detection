@@ -1,0 +1,49 @@
+# Experiment 2: Main — Balanced mix of GPT + Claude translations
+# Purpose: Reduce source-style overfitting by training on two distinct
+# translation styles. Expected to generalize better across Arabic text sources.
+# Both GPT (725 rows) and Claude (743 rows) are included at natural counts
+# (already near-balanced between sources). Class imbalance handled via weights.
+
+experiment_name: main_gpt_claude_mixed
+description: "GPT + Claude translations mixed. Main robust experiment."
+
+model:
+  name: UBC-NLP/ARBERTv2
+  # To switch to AraBERT: aubmindlab/bert-base-arabertv2
+  num_labels: 2
+  id2label:
+    0: Non-biased
+    1: Biased
+
+data:
+  raw_path: data/raw/consensus_dataset.csv
+  train_path: data/processed/main_gpt_claude_mixed/train.csv
+  test_path: data/processed/main_gpt_claude_mixed/test.csv
+  summary_path: data/processed/main_gpt_claude_mixed/dataset_summary.json
+  text_column: arabic_text
+  label_column: label
+  source_column: source
+  group_column: sentence_id          # 619 sentence_ids appear in both sources — leakage risk
+  sources_to_include: [gpt, claude]
+
+training:
+  max_length: 128
+  batch_size: 16
+  eval_batch_size: 32
+  epochs: 5
+  learning_rate: 2.0e-5
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+  use_class_weights: true
+  fp16: true
+  seed: 42
+  test_size: 0.20
+  logging_steps: 30
+
+evaluation:
+  metric_for_best_model: f1_macro
+  # Optional: after training, also evaluate on GPT-only test rows and Claude-only
+  # test rows separately to measure per-source generalization.
+  cross_source_eval: true
+
+output_dir: outputs/main_gpt_claude_mixed
