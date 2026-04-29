@@ -229,6 +229,34 @@ def train(config_path: str) -> None:
         json.dump(payload, f, indent=2)
     print(f"  Metrics saved to: {metrics_path}")
 
+    # ---- Copy to outputs/final_model (deployment-ready) -----------------------
+    import shutil
+    final_model_dir = repo_root / "outputs" / "final_model"
+    if final_model_dir.exists():
+        shutil.rmtree(final_model_dir)
+    shutil.copytree(best_model_dir, final_model_dir)
+
+    # Write model card alongside the weights
+    model_card = {
+        "experiment":    cfg["experiment_name"],
+        "base_model":    model_name,
+        "task":          "Arabic media bias detection (binary: Non-biased / Biased)",
+        "labels":        id2label,
+        "max_length":    max_len,
+        "train_samples": len(train_texts),
+        "test_samples":  len(test_texts),
+        "test_accuracy": eval_results.get("eval_accuracy"),
+        "test_f1_macro": eval_results.get("eval_f1_macro"),
+        "training_loss": train_result.training_loss,
+        "sources":       cfg["data"].get("sources_to_include", []),
+        "seed":          cfg["training"]["seed"],
+    }
+    with open(final_model_dir / "model_card.json", "w", encoding="utf-8") as f:
+        json.dump(model_card, f, indent=2, ensure_ascii=False)
+
+    print(f"\n[train] Final model saved to: {final_model_dir}")
+    print(f"  Files: {[p.name for p in final_model_dir.iterdir()]}")
+
     print(f"\n[train] Done — {cfg['experiment_name']}\n")
     return trainer, tokenizer, test_df
 
